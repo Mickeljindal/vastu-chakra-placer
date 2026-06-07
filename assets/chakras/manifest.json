@@ -1,0 +1,10 @@
+{
+  "chakras": [
+    {
+      "id": "vastu-compass-360",
+      "name": "Vastu Compass (360°)",
+      "file": "vastu-chakra-360.png",
+      "note": "16 directions · 32 devata · zones · organs"
+    }
+  ]
+}

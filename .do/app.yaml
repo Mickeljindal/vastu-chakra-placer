@@ -1,0 +1,24 @@
+# DigitalOcean App Platform spec
+# Deploy: doctl apps create --spec .do/app.yaml
+# (or paste into the App Platform UI > "Edit your app spec")
+name: vastu-chakra-placer
+region: blr   # Bangalore; change to nyc/sfo/ams/sgp/fra/lon/tor/syd as needed
+services:
+  - name: web
+    # ---- Option A: build from a Git repo (recommended) ----
+    # Uncomment and set your repo; App Platform auto-detects the Dockerfile.
+    # github:
+    #   repo: your-username/vastu-chakra-placer
+    #   branch: main
+    #   deploy_on_push: true
+
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb   # smallest/cheapest tier
+    health_check:
+      http_path: /
+      initial_delay_seconds: 5
+      period_seconds: 30
+    routes:
+      - path: /

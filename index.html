@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vastu Shakti Chakra Placer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="30" height="30">
+          <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="24" cy="24" r="3" fill="currentColor"/>
+          <line x1="24" y1="3" x2="24" y2="45" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="24" x2="45" y2="24" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="9" y1="9" x2="39" y2="39" stroke="currentColor" stroke-width="1"/>
+          <line x1="39" y1="9" x2="9" y2="39" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>Vastu Shakti Chakra</h1>
+        <p>Brahmasthan finder &amp; chakra placement studio</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="status" class="status"></span>
+      <button id="btnDownload" class="btn primary">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Image
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ====================== SIDEBAR ====================== -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- STEP 1: Upload -->
+      <section class="panel" id="panelUpload">
+        <h2><span class="step-num">1</span> <span class="step-title">Floor Plan or Map</span></h2>
+        <div class="panel-body">
+          <div class="source-tabs">
+            <button class="src-tab active" id="tabUpload" data-src="upload">Upload Plan</button>
+            <button class="src-tab" id="tabMap" data-src="map">Use Map (True North)</button>
+          </div>
+
+          <div id="srcUpload">
+            <div id="dropZone" class="dropzone">
+              <input id="fileInput" type="file" accept="image/*,application/pdf" hidden />
+              <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p><strong>Drop a file</strong> or click to browse</p>
+              <span class="hint">PDF · PNG · JPG · WEBP</span>
+            </div>
+            <div id="pdfPager" class="pager" hidden>
+              <button class="btn ghost icon" id="pdfPrev" aria-label="Previous page">‹</button>
+              <span id="pdfPageLabel">1 / 1</span>
+              <button class="btn ghost icon" id="pdfNext" aria-label="Next page">›</button>
+            </div>
+          </div>
+
+          <div id="srcMap" hidden>
+            <p class="desc">Find the property on the satellite map. The view is locked to <strong>true North</strong>, so the chakra aligns automatically. Then click <strong>Capture</strong>.</p>
+
+            <div id="mapKeyBox" class="map-keybox">
+              <label for="mapKeyInput">Google Maps API key</label>
+              <div class="map-key-row">
+                <input type="password" id="mapKeyInput" placeholder="Paste your API key…" autocomplete="off" />
+                <button class="btn solid" id="btnSaveMapKey">Save</button>
+              </div>
+              <p class="key-hint">
+                Get a free key at <strong>console.cloud.google.com/google/maps-apis</strong> ·
+                enable <strong>Maps JavaScript API</strong> + <strong>Places API</strong>.
+                Stored only in this browser.
+                <button class="link-btn" id="btnClearMapKey" hidden>Remove saved key</button>
+              </p>
+            </div>
+
+            <div class="field" id="mapSearchField" hidden>
+              <input type="text" id="mapSearch" placeholder="Search address or place…" />
+            </div>
+            <div id="mapHolder" class="map-holder">
+              <div class="map-placeholder" id="mapPlaceholder">
+                <p>Enter your Google Maps API key above to load the map.</p>
+                <span class="hint">Or use the Upload Plan tab</span>
+              </div>
+            </div>
+            <div class="map-northnote" id="mapNorthNote" hidden>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+              View locked to true North
+            </div>
+            <button class="btn accent full" id="btnCaptureMap" hidden>Capture Map View</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP 2: Mark Center (Brahmasthan) -->
+      <section class="panel disabled" id="panelCenter">
+        <h2><span class="step-num">2</span> <span class="step-title">Find Brahmasthan</span></h2>
+        <div class="panel-body">
+          <p class="desc">Mark the four corners of the property boundary. The diagonals automatically reveal the exact centre — the Brahmasthan.</p>
+          <div class="corner-status" id="cornerStatus">
+            <span class="corner-dot" id="c0">1</span>
+            <span class="corner-dot" id="c1">2</span>
+            <span class="corner-dot" id="c2">3</span>
+            <span class="corner-dot" id="c3">4</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn solid" id="btnMarkCorners">Mark Corners</button>
+            <button class="btn ghost" id="btnResetCorners">Reset</button>
+          </div>
+          <button class="btn ghost full" id="btnManualCenter">Or place centre manually</button>
+          <button class="btn accent full" id="btnLockCenter">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Lock Centre
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: Set North -->
+      <section class="panel disabled" id="panelNorth">
+        <h2><span class="step-num">3</span> <span class="step-title">Set North</span></h2>
+        <div class="panel-body">
+          <p class="desc">Click a point on the plan that lies toward <strong>North</strong> from the centre, or enter the bearing in degrees.</p>
+          <div class="btn-row">
+            <button class="btn solid" id="btnSetNorth">Point to North</button>
+            <button class="btn ghost" id="btnNorthManual">Degrees</button>
+          </div>
+          <div class="control" id="northDegControl" hidden>
+            <div class="control-head">
+              <label>North bearing</label>
+              <span class="val"><span id="northDegVal">0</span>°</span>
+            </div>
+            <input type="range" id="northDegRange" min="0" max="359" step="1" value="0" />
+          </div>
+          <button class="btn accent full" id="btnLockNorth" hidden>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+            Lock North &amp; Place Chakra
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 4: Adjust -->
+      <section class="panel disabled" id="panelAdjust">
+        <h2><span class="step-num">4</span> <span class="step-title">Fine-tune</span></h2>
+        <div class="panel-body">
+          <div class="control">
+            <div class="control-head">
+              <label>Rotation</label>
+              <span class="val"><span id="fineRotVal">0</span>°</span>
+            </div>
+            <input type="range" id="fineRotRange" min="0" max="359.5" step="0.5" value="0" />
+            <div class="btn-row" style="margin-top:8px">
+              <button class="btn ghost" id="btnRotMinus" title="Rotate counter-clockwise">−1°</button>
+              <button class="btn ghost" id="btnRotZero" title="Re-align to North">Align N</button>
+              <button class="btn ghost" id="btnRotPlus" title="Rotate clockwise">+1°</button>
+            </div>
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label>Size</label>
+              <span class="val"><span id="sizeVal">100</span>%</span>
+            </div>
+            <input type="range" id="sizeRange" min="10" max="400" step="1" value="100" />
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label>Opacity</label>
+              <span class="val"><span id="opacityVal">80</span>%</span>
+            </div>
+            <input type="range" id="opacityRange" min="10" max="100" step="1" value="80" />
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="dimPlan" />
+            <span class="track"></span>
+            <span class="switch-label">Dim floor plan</span>
+          </label>
+          <button class="btn ghost full" id="btnStartOver">Start over</button>
+        </div>
+      </section>
+
+      <!-- Chakra Image -->
+      <section class="panel subtle">
+        <h2><span class="step-title">Chakra Image</span></h2>
+        <div class="panel-body">
+          <p class="desc">Using the bundled Shakti Chakra. Upload your own if needed.</p>
+          <div id="chakraDrop" class="dropzone small">
+            <input id="chakraInput" type="file" accept="image/*" hidden />
+            <p><strong>Upload custom chakra</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Watermark / Expert Branding -->
+      <section class="panel subtle" id="panelWatermark">
+        <h2>
+          <span class="step-title">Watermark &amp; Branding</span>
+          <label class="switch tight" title="Show watermark">
+            <input type="checkbox" id="wmEnable" />
+            <span class="track"></span>
+          </label>
+        </h2>
+        <div class="panel-body" id="wmBody">
+          <p class="desc">Add your details. They are stamped onto every exported image automatically.</p>
+
+          <div class="field">
+            <label for="wmName">Name / Firm</label>
+            <input type="text" id="wmName" placeholder="e.g. Pandit Verma Ji" maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="wmTitle">Title / Tagline</label>
+            <input type="text" id="wmTitle" placeholder="e.g. Certified Vastu Consultant" maxlength="70" />
+          </div>
+          <div class="field">
+            <label for="wmContact">Phone / Email / Website</label>
+            <input type="text" id="wmContact" placeholder="e.g. +91 98765 43210 · vastu.com" maxlength="80" />
+          </div>
+
+          <div class="field">
+            <label>Logo (optional)</label>
+            <div id="wmLogoDrop" class="dropzone small">
+              <input id="wmLogoInput" type="file" accept="image/*" hidden />
+              <p id="wmLogoLabel"><strong>Add logo</strong></p>
+            </div>
+            <button class="btn ghost full" id="wmLogoClear" hidden>Remove logo</button>
+          </div>
+
+          <div class="field">
+            <label for="wmPosition">Position</label>
+            <select id="wmPosition">
+              <option value="bottom-right">Bottom right</option>
+              <option value="bottom-left">Bottom left</option>
+              <option value="bottom-center">Bottom center</option>
+              <option value="top-right">Top right</option>
+              <option value="top-left">Top left</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label>Watermark size</label>
+              <span class="val"><span id="wmSizeVal">100</span>%</span>
+            </div>
+            <input type="range" id="wmSizeRange" min="50" max="200" step="5" value="100" />
+          </div>
+          <div class="control">
+            <div class="control-head">
+              <label>Opacity</label>
+              <span class="val"><span id="wmOpacityVal">90</span>%</span>
+            </div>
+            <input type="range" id="wmOpacityRange" min="20" max="100" step="1" value="90" />
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ====================== CANVAS ====================== -->
+    <section class="stage-wrap" id="stageWrap">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-card">
+          <svg class="empty-mandala" viewBox="0 0 120 120" width="96" height="96" fill="none" stroke="currentColor">
+            <circle cx="60" cy="60" r="54" stroke-width="1.5"/>
+            <circle cx="60" cy="60" r="38" stroke-width="1"/>
+            <circle cx="60" cy="60" r="22" stroke-width="1"/>
+            <circle cx="60" cy="60" r="4" fill="currentColor" stroke="none"/>
+            <line x1="60" y1="6" x2="60" y2="114" stroke-width="1"/>
+            <line x1="6" y1="60" x2="114" y2="60" stroke-width="1"/>
+            <line x1="22" y1="22" x2="98" y2="98" stroke-width=".7"/>
+            <line x1="98" y1="22" x2="22" y2="98" stroke-width=".7"/>
+          </svg>
+          <h3>Begin your analysis</h3>
+          <p>Upload a floor plan, then mark the corners to find the Brahmasthan, set North, and place the chakra.</p>
+        </div>
+      </div>
+      <canvas id="canvas"></canvas>
+
+      <!-- floating view toolbar -->
+      <div class="view-toolbar">
+        <button class="btn ghost icon" id="btnZoomOut" aria-label="Zoom out">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="btn ghost" id="btnZoom100">100%</button>
+        <button class="btn ghost icon" id="btnZoomIn" aria-label="Zoom in">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <span class="tb-divider"></span>
+        <button class="btn ghost" id="btnFit">Fit</button>
+      </div>
+
+      <div class="zoom-badge" id="zoomBadge" hidden>100%</div>
+      <div class="mode-badge" id="modeBadge" hidden></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Developed by <strong>Secured Orbis Private Limited</strong></p>
+  </footer>
+
+  <!-- pdf.js for PDF floor plans -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/chakras.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
