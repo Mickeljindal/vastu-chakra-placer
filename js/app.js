@@ -415,6 +415,17 @@
       drawWatermark(ctx);
       ctx.restore();
     }
+
+    // Advanced features overlay
+    if (window.VastuAdvanced && VastuAdvanced.state.enabled) {
+      VastuAdvanced.drawAdvanced(ctx, w2s, {
+        centerPt, northAngle, northLocked,
+        planW: plan.w, planH: plan.h,
+        chakraScale: chakra.scale,
+        zoom: view.zoom,
+        viewTx: view.tx, viewTy: view.ty,
+      });
+    }
   }
 
   function dot(x, y, color, r) {
@@ -533,6 +544,13 @@
     if (!plan.img) return;
     const p = getPos(e);
     canvas.setPointerCapture(e.pointerId);
+
+    // Advanced tools intercept
+    if (window.VastuAdvanced && VastuAdvanced.state.enabled && VastuAdvanced.state.tool !== "none") {
+      const wp = s2w(p.x, p.y);
+      const consumed = VastuAdvanced.handlePointer(wp, { centerPt, northAngle });
+      if (consumed) { render(); return; }
+    }
 
     if (mode === "markCorners") {
       const wp = s2w(p.x, p.y);
@@ -1043,6 +1061,14 @@
     // watermark (drawn directly in plan-pixel space at full resolution)
     drawWatermark(o);
 
+    // advanced annotations export
+    if (window.VastuAdvanced && VastuAdvanced.state.enabled) {
+      VastuAdvanced.drawAdvancedExport(o, plan.w, plan.h, {
+        centerPt, northAngle, northLocked,
+        chakraScale: chakra.scale,
+      });
+    }
+
     out.toBlob((blob) => {
       const a = document.createElement("a"); a.download = `vastu-analysis-${Date.now()}.png`;
       a.href = URL.createObjectURL(blob); a.click();
@@ -1055,6 +1081,115 @@
   restoreWatermark();
 
   // Wire account buttons (no-op, auth removed)
+
+  /* ============ ADVANCED FEATURES INTEGRATION ============ */
+  const advEls = {
+    enable: $("advEnable"), body: $("advBody"),
+    clientEnable: $("advClientEnable"),
+    clientName: $("advClientName"), clientAddr: $("advClientAddr"), clientDate: $("advClientDate"),
+    toolRoom: $("advToolRoom"), toolEntrance: $("advToolEntrance"),
+    toolMeasure: $("advToolMeasure"), toolNote: $("advToolNote"),
+    finishRoom: $("advFinishRoom"),
+    zoneOverlay: $("advZoneOverlay"),
+    save: $("advSave"), load: $("advLoad"), projectList: $("advProjectList"),
+    clear: $("advClear"),
+  };
+
+  if (advEls.enable && window.VastuAdvanced) {
+    const VA = VastuAdvanced;
+
+    advEls.enable.addEventListener("change", (e) => {
+      VA.state.enabled = e.target.checked;
+      advEls.body.hidden = !e.target.checked;
+      render();
+    });
+
+    // Client info
+    advEls.clientEnable.addEventListener("change", (e) => { VA.state.clientEnabled = e.target.checked; render(); });
+    advEls.clientName.addEventListener("input", (e) => { VA.state.client.name = e.target.value; render(); });
+    advEls.clientAddr.addEventListener("input", (e) => { VA.state.client.address = e.target.value; render(); });
+    advEls.clientDate.addEventListener("input", (e) => { VA.state.client.date = e.target.value; render(); });
+
+    // Tools
+    function setAdvTool(t) {
+      VA.state.tool = t;
+      advEls.finishRoom.hidden = t !== "room";
+      setMode(t === "none" ? "idle" : "adv_" + t, t === "none" ? null : "Advanced: " + t);
+      // highlight active button
+      [advEls.toolRoom, advEls.toolEntrance, advEls.toolMeasure, advEls.toolNote].forEach((b) => b.classList.remove("active"));
+      if (t === "room") advEls.toolRoom.classList.add("active");
+      if (t === "entrance") advEls.toolEntrance.classList.add("active");
+      if (t === "measure") advEls.toolMeasure.classList.add("active");
+      if (t === "note") advEls.toolNote.classList.add("active");
+    }
+    advEls.toolRoom.addEventListener("click", () => setAdvTool(VA.state.tool === "room" ? "none" : "room"));
+    advEls.toolEntrance.addEventListener("click", () => setAdvTool(VA.state.tool === "entrance" ? "none" : "entrance"));
+    advEls.toolMeasure.addEventListener("click", () => setAdvTool(VA.state.tool === "measure" ? "none" : "measure"));
+    advEls.toolNote.addEventListener("click", () => setAdvTool(VA.state.tool === "note" ? "none" : "note"));
+    advEls.finishRoom.addEventListener("click", () => { VA.finishRoom(centerPt, northAngle); setAdvTool("none"); render(); });
+
+    // Zone overlay
+    advEls.zoneOverlay.addEventListener("change", (e) => { VA.state.zoneOverlay = e.target.checked; render(); });
+
+    // Save/Load
+    advEls.save.addEventListener("click", () => {
+      const name = VA.saveProject({
+        corners, centerPt, northAngle,
+        chakraRotation: chakra.rotation, chakraScale: chakra.scale,
+      });
+      setStatus("Project saved: " + name);
+    });
+    advEls.load.addEventListener("click", () => {
+      const list = VA.loadProjectList();
+      if (!list.length) { setStatus("No saved projects."); return; }
+      advEls.projectList.hidden = false;
+      advEls.projectList.innerHTML = list.map((p, i) =>
+        `<div class="proj-item"><span>${p.name || "Untitled"}</span><button data-i="${i}" class="btn ghost tiny proj-load">Load</button><button data-i="${i}" class="btn ghost tiny proj-del">✕</button></div>`
+      ).join("");
+      advEls.projectList.querySelectorAll(".proj-load").forEach((b) => {
+        b.addEventListener("click", () => {
+          VA.loadProject(parseInt(b.dataset.i), (p) => {
+            // restore app state from project
+            corners.length = 0;
+            if (p.corners) p.corners.forEach((c) => corners.push(c));
+            centerPt = p.centerPt || null;
+            northAngle = p.northAngle != null ? p.northAngle : null;
+            if (p.chakraRotation != null) chakra.rotation = p.chakraRotation;
+            if (p.chakraScale != null) chakra.scale = p.chakraScale;
+            centerLocked = !!centerPt;
+            northLocked = northAngle != null;
+            updateCornerDots();
+            if (centerLocked) { donePanel(els.panelCenter); enablePanel(els.panelNorth); }
+            if (northLocked) { donePanel(els.panelNorth); enablePanel(els.panelAdjust); }
+            // sync client fields
+            advEls.clientEnable.checked = VA.state.clientEnabled;
+            advEls.clientName.value = VA.state.client.name;
+            advEls.clientAddr.value = VA.state.client.address;
+            advEls.clientDate.value = VA.state.client.date;
+          });
+          advEls.projectList.hidden = true;
+          setStatus("Project loaded.");
+          render();
+        });
+      });
+      advEls.projectList.querySelectorAll(".proj-del").forEach((b) => {
+        b.addEventListener("click", () => {
+          VA.deleteProject(parseInt(b.dataset.i));
+          b.closest(".proj-item").remove();
+          setStatus("Project deleted.");
+        });
+      });
+    });
+
+    // Clear
+    advEls.clear.addEventListener("click", () => {
+      if (confirm("Clear all annotations, rooms, measurements and notes?")) {
+        VA.resetAdvanced();
+        setAdvTool("none");
+        render();
+      }
+    });
+  }
 
   // Load chakra image: localStorage (user's upload) → bundled file → SVG fallback
   if (!loadChakraFromStorage()) {

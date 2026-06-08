@@ -780,3 +780,16 @@ input[type="range"]::-moz-range-thumb {
 
 /* hide auth when not needed */
 .auth-screen[hidden] { display: none !important; }
+
+
+/* ===================== Advanced Tools Panel ===================== */
+.adv-section { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+.adv-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.adv-h3 { font-family: "Inter", sans-serif; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px; letter-spacing: .3px; text-transform: uppercase; }
+.btn.active { border-color: var(--saffron); background: var(--saffron-tint); color: var(--saffron-dark); }
+
+/* Project list */
+.project-list { margin-top: 10px; max-height: 160px; overflow-y: auto; }
+.proj-item { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
+.proj-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-soft); }
+.proj-item .btn { flex: none; padding: 4px 8px; font-size: 11px; }
