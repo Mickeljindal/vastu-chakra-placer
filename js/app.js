@@ -76,6 +76,7 @@
     panelNorth: $("panelNorth"), panelAdjust: $("panelAdjust"),
     cornerStatus: $("cornerStatus"),
     btnMarkCorners: $("btnMarkCorners"), btnResetCorners: $("btnResetCorners"),
+    btnUndoCorner: $("btnUndoCorner"),
     btnLockCenter: $("btnLockCenter"), btnManualCenter: $("btnManualCenter"),
     btnSetNorth: $("btnSetNorth"), btnNorthManual: $("btnNorthManual"),
     northDegControl: $("northDegControl"), northDegRange: $("northDegRange"), northDegVal: $("northDegVal"),
@@ -614,7 +615,7 @@
   });
 
   // Undo last corner point
-  $("btnUndoCorner").addEventListener("click", () => {
+  els.btnUndoCorner.addEventListener("click", () => {
     if (corners.length === 0) {
       setStatus("No corners to undo.");
       return;
