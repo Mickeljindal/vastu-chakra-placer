@@ -575,3 +575,208 @@ input[type="range"]::-moz-range-thumb {
 }
 .site-footer p { margin: 0; }
 .site-footer strong { color: var(--ink-soft); font-weight: 600; }
+
+
+/* ===================== Auth Screen ===================== */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  overflow-y: auto;
+}
+.auth-card {
+  max-width: 700px;
+  width: 100%;
+  padding: 40px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(74,54,30,.12);
+}
+.auth-brand {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--maroon);
+}
+.auth-brand svg { margin-bottom: 12px; }
+.auth-brand h1 { font-size: 24px; margin: 0 0 6px; }
+.auth-brand p { margin: 0; font-size: 13px; color: var(--ink-faint); }
+
+.auth-form { max-width: 340px; margin: 0 auto 30px; }
+.auth-form input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 3px var(--saffron-tint);
+}
+.auth-divider {
+  text-align: center;
+  margin: 16px 0;
+  position: relative;
+}
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--line);
+}
+.auth-divider span {
+  position: relative;
+  padding: 0 12px;
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 10px;
+  justify-content: center;
+}
+.auth-error {
+  color: var(--red);
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+}
+.auth-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 16px;
+}
+
+/* ===================== Pricing ===================== */
+.auth-pricing h3 {
+  text-align: center;
+  color: var(--maroon);
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.price-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  background: var(--surface-2);
+  position: relative;
+}
+.price-card.featured {
+  border-color: var(--saffron);
+  background: var(--saffron-tint);
+  box-shadow: 0 4px 20px rgba(224,123,26,.15);
+}
+.price-card .badge {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--saffron);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.price-card h4 { margin: 0 0 6px; font-size: 16px; color: var(--ink); }
+.price-card .price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--maroon);
+  margin-bottom: 12px;
+}
+.price-card .price span { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
+.price-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+.price-card li {
+  font-size: 12.5px;
+  padding: 4px 0;
+  color: var(--ink);
+}
+.price-card li::before {
+  content: "✓ ";
+  color: var(--green);
+  font-weight: 700;
+}
+.price-card li.disabled {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+.price-card li.disabled::before { content: "— "; color: var(--ink-faint); }
+
+/* ===================== Account Panel ===================== */
+.account-panel { padding: 12px 14px; }
+.account-panel h2 { display: none; }
+.account-row { display: flex; align-items: center; justify-content: space-between; }
+.account-info { display: flex; align-items: center; gap: 8px; }
+.account-name { font-size: 13px; font-weight: 600; color: var(--ink); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--line);
+  color: var(--ink-soft);
+}
+.account-badge.pro { background: var(--saffron-tint); color: var(--saffron-dark); }
+.account-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--ink-faint); }
+.upgrade-btn {
+  background: linear-gradient(135deg, var(--saffron), #d4680e) !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600;
+  font-size: 11px;
+}
+.upgrade-btn:hover { opacity: .9; }
+
+/* Feature locked overlay */
+.feature-locked {
+  position: relative;
+  pointer-events: none;
+  opacity: .5;
+}
+.feature-locked::after {
+  content: "PRO";
+  position: absolute;
+  top: 8px; right: 8px;
+  background: var(--saffron);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+}
+
+/* hide auth when not needed */
+.auth-screen[hidden] { display: none !important; }
