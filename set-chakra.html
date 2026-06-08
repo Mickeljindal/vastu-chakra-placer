@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Set Default Chakra Image</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; text-align: center; background: #1a1a1a; color: #eee; }
+    h1 { color: #ff7a00; }
+    .drop { border: 3px dashed #555; border-radius: 16px; padding: 60px 20px; margin: 30px 0; cursor: pointer; transition: .2s; }
+    .drop:hover, .drop.over { border-color: #ff7a00; background: rgba(255,122,0,.05); }
+    .drop p { margin: 0; font-size: 18px; }
+    .drop small { color: #888; }
+    input[type=file] { display: none; }
+    .preview { max-width: 300px; margin: 20px auto; border-radius: 12px; }
+    .done { color: #2ecc71; font-size: 20px; font-weight: bold; }
+    .btn { background: #ff7a00; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 10px; cursor: pointer; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Set Default Vastu Chakra</h1>
+  <p>Drop or select your Vastu Shakti Chakra image below.<br>It will be saved as the default and used automatically in the app.</p>
+
+  <div class="drop" id="drop">
+    <p>Drop image here or click to select</p>
+    <small>PNG · JPG · WEBP</small>
+    <input type="file" id="fileIn" accept="image/*">
+  </div>
+
+  <div id="result" hidden>
+    <img class="preview" id="preview">
+    <p class="done">✓ Saved as default chakra!</p>
+    <p>Reload the main app — your chakra will load automatically.</p>
+  </div>
+
+  <script>
+    const STORE_KEY = "vastu_chakra_img_v1";
+    const drop = document.getElementById("drop");
+    const fileIn = document.getElementById("fileIn");
+    const result = document.getElementById("result");
+    const preview = document.getElementById("preview");
+
+    drop.addEventListener("click", () => fileIn.click());
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); handleFile(e.dataTransfer.files[0]); });
+    fileIn.addEventListener("change", (e) => handleFile(e.target.files[0]));
+
+    function handleFile(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // Resize to max 1200px and compress as JPEG to fit in localStorage
+          const max = 1200;
+          let w = img.width, h = img.height;
+          if (w > max || h > max) {
+            const scale = max / Math.max(w, h);
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+          }
+          const c = document.createElement("canvas");
+          c.width = w; c.height = h;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = c.toDataURL("image/png", 0.9);
+          try {
+            localStorage.setItem(STORE_KEY, dataUrl);
+            preview.src = dataUrl;
+            result.hidden = false;
+            drop.hidden = true;
+          } catch (e) {
+            // Try JPEG with more compression
+            const jpgUrl = c.toDataURL("image/jpeg", 0.7);
+            try {
+              localStorage.setItem(STORE_KEY, jpgUrl);
+              preview.src = jpgUrl;
+              result.hidden = false;
+              drop.hidden = true;
+            } catch (e2) {
+              alert("Image still too large. Please use a smaller image (under 1000x1000px).");
+            }
+          }
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Show current saved image if any
+    const saved = localStorage.getItem(STORE_KEY);
+    if (saved) {
+      preview.src = saved;
+      result.hidden = false;
+      result.querySelector(".done").textContent = "✓ Current default chakra (drop a new one above to replace)";
+      drop.querySelector("p").textContent = "Drop a new image to replace";
+    }
+  </script>
+</body>
+</html>

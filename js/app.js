@@ -225,21 +225,43 @@
 
   function loadChakraFile(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    // read as data URL to persist in localStorage
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result;
       const img = new Image();
       img.onload = () => {
-        chakra.img = img;
-        chakra.natW = img.naturalWidth;
-        chakra.natH = img.naturalHeight;
-        // save to localStorage so it persists across sessions
-        try { localStorage.setItem(CHAKRA_STORE_KEY, dataUrl); } catch (_) {}
-        setStatus("Chakra image set and saved.");
-        render();
+        // Resize to max 1200px to fit in localStorage
+        const max = 1200;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) {
+          const scale = max / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const cCtx = c.getContext("2d");
+        cCtx.drawImage(img, 0, 0, w, h);
+        // Use the resized canvas as the chakra source
+        const resized = new Image();
+        resized.onload = () => {
+          chakra.img = resized;
+          chakra.natW = w;
+          chakra.natH = h;
+          // Save compressed version to localStorage
+          let dataUrl = c.toDataURL("image/png", 0.9);
+          try {
+            localStorage.setItem(CHAKRA_STORE_KEY, dataUrl);
+          } catch (_) {
+            // fallback: try JPEG
+            dataUrl = c.toDataURL("image/jpeg", 0.7);
+            try { localStorage.setItem(CHAKRA_STORE_KEY, dataUrl); } catch (_2) {}
+          }
+          setStatus("Chakra image set and saved.");
+          render();
+        };
+        resized.src = c.toDataURL("image/png", 0.9);
       };
-      img.src = dataUrl;
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
   }
