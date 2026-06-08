@@ -221,12 +221,38 @@
   }
 
   /* ============ CHAKRA IMAGE ============ */
+  const CHAKRA_STORE_KEY = "vastu_chakra_img_v1";
+
   function loadChakraFile(file) {
     if (!file || !file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
+    // read as data URL to persist in localStorage
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const img = new Image();
+      img.onload = () => {
+        chakra.img = img;
+        chakra.natW = img.naturalWidth;
+        chakra.natH = img.naturalHeight;
+        // save to localStorage so it persists across sessions
+        try { localStorage.setItem(CHAKRA_STORE_KEY, dataUrl); } catch (_) {}
+        setStatus("Chakra image set and saved.");
+        render();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadChakraFromStorage() {
+    let dataUrl = null;
+    try { dataUrl = localStorage.getItem(CHAKRA_STORE_KEY); } catch (_) {}
+    if (!dataUrl) return false;
     const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); chakra.img = img; chakra.natW = img.naturalWidth; chakra.natH = img.naturalHeight; render(); };
-    img.src = url;
+    img.onload = () => { chakra.img = img; chakra.natW = img.naturalWidth; chakra.natH = img.naturalHeight; render(); };
+    img.onerror = () => { try { localStorage.removeItem(CHAKRA_STORE_KEY); } catch (_) {} };
+    img.src = dataUrl;
+    return true;
   }
 
   /* ============ STEP 2: CORNERS & CENTER ============ */
@@ -492,8 +518,10 @@
         updateCornerDots();
         if (corners.length === 4) {
           centerPt = computeCenter();
-          setStatus("Center found! Lock it or adjust corners.");
+          setStatus("Center found! Lock it, or Undo to adjust a point.");
           setMode("idle", null);
+        } else {
+          setStatus("Corner " + corners.length + " of 4 placed. Click next. (Undo Last to fix mistakes)");
         }
         render();
       }
@@ -561,6 +589,20 @@
   els.btnResetCorners.addEventListener("click", () => {
     corners.length = 0; centerPt = null; centerLocked = false; updateCornerDots();
     resetToStep(2); render();
+  });
+
+  // Undo last corner point
+  $("btnUndoCorner").addEventListener("click", () => {
+    if (corners.length === 0) return;
+    corners.pop();
+    centerPt = corners.length === 4 ? computeCenter() : null;
+    updateCornerDots();
+    // stay in markCorners mode so user can re-click
+    if (corners.length < 4) {
+      setMode("markCorners", "Click corner " + (corners.length + 1) + " of 4");
+      setStatus("Corner " + corners.length + " of 4 set. Click the next one. (Undo available)");
+    }
+    render();
   });
   els.btnManualCenter.addEventListener("click", () => {
     setMode("markCenter", "Click to set center (Brahmasthan)");
@@ -1007,25 +1049,27 @@
     // Record the export after successful download
     if (window.VastuAuth) VastuAuth.recordExport();
   }, true); // capture phase to run before the download handler
-  // Load default bundled chakra image (user should place their transparent chakra PNG here)
-  // If it fails, fall back to the SVG-generated one
-  const defaultImg = new Image();
-  defaultImg.crossOrigin = "anonymous";
-  defaultImg.onload = () => { chakra.img = defaultImg; chakra.natW = defaultImg.naturalWidth; chakra.natH = defaultImg.naturalHeight; render(); };
-  defaultImg.onerror = () => {
-    // fallback: generate SVG chakra if bundled image not found
-    if (window.VastuChakra) {
-      const size = 1800;
-      const inner = window.VastuChakra.build(size);
-      const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + inner + '</svg>';
-      const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const fb = new Image();
-      fb.onload = () => { chakra.img = fb; chakra.natW = size; chakra.natH = size; URL.revokeObjectURL(url); render(); };
-      fb.src = url;
-    } else {
-      setStatus("Upload a chakra image to get started.");
-    }
-  };
-  defaultImg.src = "assets/chakras/vastu-shakti-chakra.png";
+
+  // Load chakra image: localStorage (user's upload) → bundled file → SVG fallback
+  if (!loadChakraFromStorage()) {
+    const defaultImg = new Image();
+    defaultImg.crossOrigin = "anonymous";
+    defaultImg.onload = () => { chakra.img = defaultImg; chakra.natW = defaultImg.naturalWidth; chakra.natH = defaultImg.naturalHeight; render(); };
+    defaultImg.onerror = () => {
+      // fallback: generate SVG chakra if bundled image not found
+      if (window.VastuChakra) {
+        const size = 1800;
+        const inner = window.VastuChakra.build(size);
+        const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + inner + '</svg>';
+        const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const fb = new Image();
+        fb.onload = () => { chakra.img = fb; chakra.natW = size; chakra.natH = size; URL.revokeObjectURL(url); render(); };
+        fb.src = url;
+      } else {
+        setStatus("Upload your Vastu Shakti Chakra image via the sidebar.");
+      }
+    };
+    defaultImg.src = "assets/chakras/vastu-shakti-chakra.png";
+  }
 })();
