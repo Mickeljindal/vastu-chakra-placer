@@ -593,14 +593,19 @@
 
   // Undo last corner point
   $("btnUndoCorner").addEventListener("click", () => {
-    if (corners.length === 0) return;
+    if (corners.length === 0) {
+      setStatus("No corners to undo.");
+      return;
+    }
     corners.pop();
     centerPt = corners.length === 4 ? computeCenter() : null;
     updateCornerDots();
-    // stay in markCorners mode so user can re-click
-    if (corners.length < 4) {
-      setMode("markCorners", "Click corner " + (corners.length + 1) + " of 4");
-      setStatus("Corner " + corners.length + " of 4 set. Click the next one. (Undo available)");
+    // always re-enter marking mode so the next canvas click adds a corner
+    setMode("markCorners", "Click corner " + (corners.length + 1) + " of 4");
+    if (corners.length === 0) {
+      setStatus("All corners removed. Click to start marking again.");
+    } else {
+      setStatus("Removed last corner. Now at " + corners.length + "/4. Click to place corner " + (corners.length + 1) + ".");
     }
     render();
   });
