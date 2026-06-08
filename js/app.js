@@ -1026,29 +1026,7 @@
   resizeCanvas();
   restoreWatermark();
 
-  // Wire account buttons
-  const btnSignOut = $("btnSignOut");
-  const btnUpgrade = $("btnUpgrade");
-  if (btnSignOut) btnSignOut.addEventListener("click", () => {
-    if (window.VastuAuth) VastuAuth.signOut();
-  });
-  if (btnUpgrade) btnUpgrade.addEventListener("click", () => {
-    if (window.VastuAuth) VastuAuth.startSubscription("monthly");
-  });
-
-  // Patch export to check subscription limits
-  const origDownload = els.btnDownload.onclick;
-  els.btnDownload.addEventListener("click", (e) => {
-    if (window.VastuAuth && !VastuAuth.canExport()) {
-      e.stopImmediatePropagation();
-      const used = VastuAuth.getCurrentPlan().exportsPerMonth;
-      alert("You have reached your " + used + " export limit for this month.\n\nUpgrade to Pro for unlimited exports.");
-      VastuAuth.startSubscription("monthly");
-      return;
-    }
-    // Record the export after successful download
-    if (window.VastuAuth) VastuAuth.recordExport();
-  }, true); // capture phase to run before the download handler
+  // Wire account buttons (no-op, auth removed)
 
   // Load chakra image: localStorage (user's upload) → bundled file → SVG fallback
   if (!loadChakraFromStorage()) {
