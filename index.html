@@ -354,5 +354,9 @@
   <script src="js/chakras.js"></script>
   <script src="js/advanced.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    // Verify advanced module loaded
+    if (!window.VastuAdvanced) console.error("VastuAdvanced module failed to load!");
+  </script>
 </body>
 </html>
