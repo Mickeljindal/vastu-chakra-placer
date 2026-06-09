@@ -862,9 +862,11 @@
       initDrawMode();
       canvas.style.display = "none";
       if (drawCanvas) drawCanvas.style.display = "block";
+      els.emptyState.style.display = "none";
     } else {
       canvas.style.display = "block";
       if (drawCanvas) drawCanvas.style.display = "none";
+      if (!plan.img) els.emptyState.style.display = "";
     }
     if (src === "map") initMapsFeature();
   }
@@ -986,6 +988,8 @@
       drawCanvas.style.boxShadow = "0 4px 24px rgba(0,0,0,.15)";
       drawCanvas.style.cursor = "crosshair";
       drawCanvas.style.display = "none";
+      drawCanvas.style.zIndex = "5";
+      drawCanvas.style.background = "#fff";
       els.stageWrap.appendChild(drawCanvas);
       VastuDrawPlan.init(drawCanvas);
 
