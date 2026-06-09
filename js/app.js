@@ -849,12 +849,24 @@
   }
 
   function switchSource(src) {
-    const isMap = src === "map";
-    els.tabUpload.classList.toggle("active", !isMap);
-    els.tabMap.classList.toggle("active", isMap);
-    els.srcUpload.hidden = isMap;
-    els.srcMap.hidden = !isMap;
-    if (isMap) initMapsFeature();
+    els.tabUpload.classList.toggle("active", src === "upload");
+    els.tabMap.classList.toggle("active", src === "map");
+    const tabDraw = $("tabDraw");
+    if (tabDraw) tabDraw.classList.toggle("active", src === "draw");
+    els.srcUpload.hidden = src !== "upload";
+    els.srcMap.hidden = src !== "map";
+    const srcDraw = $("srcDraw");
+    if (srcDraw) srcDraw.hidden = src !== "draw";
+    // show/hide main canvas vs draw canvas
+    if (src === "draw") {
+      initDrawMode();
+      canvas.style.display = "none";
+      if (drawCanvas) drawCanvas.style.display = "block";
+    } else {
+      canvas.style.display = "block";
+      if (drawCanvas) drawCanvas.style.display = "none";
+    }
+    if (src === "map") initMapsFeature();
   }
 
   function initMapsFeature() {
@@ -955,7 +967,118 @@
 
   els.tabUpload.addEventListener("click", () => switchSource("upload"));
   els.tabMap.addEventListener("click", () => switchSource("map"));
+  const tabDraw = $("tabDraw");
+  if (tabDraw) tabDraw.addEventListener("click", () => switchSource("draw"));
   els.btnCaptureMap.addEventListener("click", captureMapView);
+
+  /* ============ DRAW PLAN MODE ============ */
+  let drawCanvas = null;
+  let drawMode = false;
+
+  function initDrawMode() {
+    if (!window.VastuDrawPlan) return;
+    if (!drawCanvas) {
+      drawCanvas = document.createElement("canvas");
+      drawCanvas.style.position = "absolute";
+      drawCanvas.style.top = "50%";
+      drawCanvas.style.left = "50%";
+      drawCanvas.style.transform = "translate(-50%, -50%)";
+      drawCanvas.style.boxShadow = "0 4px 24px rgba(0,0,0,.15)";
+      drawCanvas.style.cursor = "crosshair";
+      drawCanvas.style.display = "none";
+      els.stageWrap.appendChild(drawCanvas);
+      VastuDrawPlan.init(drawCanvas);
+
+      // Pointer events for drawing
+      drawCanvas.addEventListener("pointerdown", (e) => {
+        const rect = drawCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        VastuDrawPlan.handlePointerDown({ x, y });
+      });
+      drawCanvas.addEventListener("pointermove", (e) => {
+        const rect = drawCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        VastuDrawPlan.handlePointerMove({ x, y });
+      });
+      drawCanvas.addEventListener("pointerup", () => {
+        VastuDrawPlan.handlePointerUp();
+      });
+      drawCanvas.addEventListener("dblclick", () => {
+        VastuDrawPlan.cancelWallDrawing();
+      });
+      // R key to rotate symbols
+      document.addEventListener("keydown", (e) => {
+        if (drawCanvas.style.display !== "none") {
+          if (e.key === "r" || e.key === "R") VastuDrawPlan.rotateSymbol();
+          if (e.key === "Escape") VastuDrawPlan.cancelWallDrawing();
+          if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); VastuDrawPlan.undo(); }
+        }
+      });
+    }
+    drawMode = true;
+    VastuDrawPlan.render();
+  }
+
+  // Wire draw tool buttons
+  const drawTools = ["wall","door","window","stairs","toilet","sink","stove","bed","sofa","table","car","label","eraser","select"];
+  drawTools.forEach((t) => {
+    const btn = $("drawTool" + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.addEventListener("click", () => {
+      if (!window.VastuDrawPlan) return;
+      VastuDrawPlan.setTool(t);
+      // highlight active
+      drawTools.forEach((t2) => {
+        const b = $("drawTool" + t2.charAt(0).toUpperCase() + t2.slice(1));
+        if (b) b.classList.toggle("active", t2 === t);
+      });
+    });
+  });
+
+  // Page size
+  const drawSizeA4 = $("drawSizeA4"), drawSizeA3 = $("drawSizeA3");
+  if (drawSizeA4) drawSizeA4.addEventListener("click", () => { VastuDrawPlan.setPageSize("A4"); drawSizeA4.classList.add("active"); drawSizeA3.classList.remove("active"); });
+  if (drawSizeA3) drawSizeA3.addEventListener("click", () => { VastuDrawPlan.setPageSize("A3"); drawSizeA3.classList.add("active"); drawSizeA4.classList.remove("active"); });
+
+  // Pages
+  const drawAddPage = $("drawAddPage");
+  if (drawAddPage) drawAddPage.addEventListener("click", () => { const name = prompt("Floor name:", "Floor " + (VastuDrawPlan.getState().pages.length + 1)); if (name) VastuDrawPlan.addPage(name); updateDrawPageList(); });
+
+  function updateDrawPageList() {
+    const list = $("drawPageList");
+    if (!list || !window.VastuDrawPlan) return;
+    const st = VastuDrawPlan.getState();
+    list.innerHTML = st.pages.map((p, i) =>
+      `<div class="proj-item${i === st.activePage ? " active" : ""}"><span>${p.name}</span><button data-i="${i}" class="btn ghost tiny dp-switch">Switch</button></div>`
+    ).join("");
+    list.querySelectorAll(".dp-switch").forEach((b) => {
+      b.addEventListener("click", () => { VastuDrawPlan.switchPage(parseInt(b.dataset.i)); updateDrawPageList(); });
+    });
+  }
+
+  // Undo / Clear
+  const drawUndo = $("drawUndo"), drawClear = $("drawClear");
+  if (drawUndo) drawUndo.addEventListener("click", () => { if (window.VastuDrawPlan) VastuDrawPlan.undo(); });
+  if (drawClear) drawClear.addEventListener("click", () => { if (window.VastuDrawPlan && confirm("Clear this floor?")) VastuDrawPlan.clear(); });
+
+  // Grid / Snap toggles
+  const drawGrid = $("drawGrid"), drawSnap = $("drawSnap");
+  if (drawGrid) drawGrid.addEventListener("change", (e) => { if (window.VastuDrawPlan) { VastuDrawPlan.getState().grid = e.target.checked; VastuDrawPlan.render(); } });
+  if (drawSnap) drawSnap.addEventListener("change", (e) => { if (window.VastuDrawPlan) { VastuDrawPlan.getState().snapToGrid = e.target.checked; } });
+
+  // "Use this plan" button — exports drawing as image and loads it as the floor plan
+  const btnUsePlan = $("btnUsePlan");
+  if (btnUsePlan) btnUsePlan.addEventListener("click", () => {
+    if (!window.VastuDrawPlan) return;
+    const exportCanvas = VastuDrawPlan.exportAsImage();
+    switchSource("upload");
+    resetToStep(1);
+    els.pdfPager.hidden = true;
+    pdfDoc = null;
+    setPlan(exportCanvas, exportCanvas.width, exportCanvas.height);
+    setStatus("Plan loaded from drawing. Proceed to find Brahmasthan.");
+  });
 
   // API key save / clear
   els.btnSaveMapKey.addEventListener("click", () => {

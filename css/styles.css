@@ -793,3 +793,9 @@ input[type="range"]::-moz-range-thumb {
 .proj-item { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); font-size: 12px; }
 .proj-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-soft); }
 .proj-item .btn { flex: none; padding: 4px 8px; font-size: 11px; }
+
+
+/* ===================== Draw Plan ===================== */
+.draw-pages { margin-bottom: 8px; }
+.draw-pages .proj-item.active { background: var(--saffron-tint); border-radius: 6px; padding: 4px 6px; }
+.source-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
